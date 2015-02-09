@@ -30,6 +30,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  foreman
-  sinatra
-  sinatra-contrib
+  foreman (~> 0.77.0)
+  sinatra (~> 1.4.5)
+  sinatra-contrib (~> 1.4.2)
