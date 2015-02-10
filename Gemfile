@@ -11,3 +11,4 @@ group :development do
   gem 'foreman', '~> 0.77.0'
 end
 
+gem 'omniauth-spotify', '~> 0.0.5'

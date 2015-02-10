@@ -1596,7 +1596,7 @@ button, .button {
 }
 /* line 142, ../bower_components/foundation/scss/foundation/components/_buttons.scss */
 button:hover, button:focus, .button:hover, .button:focus {
-  background-color: #04080c;
+  background-color: #638E00;
 }
 /* line 153, ../bower_components/foundation/scss/foundation/components/_buttons.scss */
 button:hover, button:focus, .button:hover, .button:focus {
@@ -4340,7 +4340,7 @@ a {
 }
 /* line 158, ../bower_components/foundation/scss/foundation/components/_type.scss */
 a:hover, a:focus {
-  color: #1a5f99;
+  color: #638E00;
 }
 /* line 160, ../bower_components/foundation/scss/foundation/components/_type.scss */
 a img {

@@ -40,4 +40,7 @@ $(document).ready(function()
 		$("html, body").animate({scrollTop: 0}, 700);
 	});
 	
+  $("#btn-auth").click(function(ev) {
+    window.location.href = "/auth";
+  });
 });
