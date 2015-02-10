@@ -1,6 +1,5 @@
-Minimal Sinatra template, as requested on Twitter.
+Web player for spotify.
 
-Run:
-
-    bundle install
-    foreman start
+This project is done with using the next software: 
+- ruby 2.2.0
+- sinatra 1.4.5
