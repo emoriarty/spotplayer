@@ -41,6 +41,6 @@ $(document).ready(function()
 	});
 	
   $("#btn-auth").click(function(ev) {
-    window.location.href = "/auth";
+    window.location.href = "/auth/spotify";
   });
 });

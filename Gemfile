@@ -12,3 +12,4 @@ group :development do
 end
 
 gem 'omniauth-spotify', '~> 0.0.5'
+gem 'rspotify', '~> 1.11.0'
