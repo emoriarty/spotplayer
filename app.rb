@@ -4,12 +4,13 @@ require "sinatra/reloader" if development?
 require 'omniauth-spotify'
 require 'uri'
 require 'digest'
-require 'net/http'
-require 'base64'
+require 'json'
+require 'typhoeus'
 
 # Config
 configure do
-  enable :sessions
+  enable :sessions, :logging
+  set :template, :erb
 
   set :spotify_id, ENV['SPOTYFY_ID']
   set :spotify_key, ENV['SPOTIFY_KEY']
@@ -21,50 +22,90 @@ configure do
   end
 end
 
-# App
-get '/' do
-  File.read(File.join(settings.public_folder, 'index.html'))
-end
-
-get '/auth/spotify' do
-  redirect ["https://accounts.spotify.com/authorize",
-    "?client_id=#{settings.spotify_id}",
-    "&response_type=code",
-    "&redirect_uri=#{URI.encode 'http://localhost:5000/callback/spotify'}",
-    "&scope=#{settings.spotify_scope}",
-    "&state=#{session[:spotify_state] = Digest::SHA256.hexdigest(settings.spotify_id) }"].join
-end
-
-get '/callback/spotify' do
-  if params[:code]
-    return "Is not the same session" unless params[:state] == session[:spotify_state]
-    return "auth failed due to #{params[:error]}" if params[:error]
-    
-    "Your auth code is #{params[:code]}"
-    redirect "/token/spotify/#{params[:code]}"
-  elsif params[:access_token]
-    return "Your access_token is #{params[:access_token]}"
+register do
+  def auth(type)
+    condition do
+      redirect "/login" unless authorize?
+    end
   end
 end
 
-get '/token/spotify/:code' do
-=begin
-  uri = URI.parse "https://accounts.spotify.com/api/token"
-  params = {
-    grant_type: "authorization_code",
-    code: params[:code],
-    redirect_uri: "http://localhost:5000/callback/spotify"
-  }
-  auth_base64 = Base64.enconde64 "#{settings.spotify_id}:#{settings.spotify_key}"
+helpers do
+  def authorize?
+    @user != nil
+  end
 
-  post = Net::HTTP::Post.new uri
-  post['Authorization'] = "Basic #{auth_base64}"
-  post.set_from_data params
-  #post.basic_auth settings.spotify_id, settings.spotify_key
-  #
-=end
-  params[:grant_type] = "authorization_code"
-  params[:redirect_uri] = "http://localhost:5000/callback/spotify" 
+  def login
+    @user = true
+  end
   
-  redirect "https://accounts.spotify.com/api/token", 307
+  def refresh_token(code)
+    request = Typhoeus::Request.new("https://accounts.spotify.com/api/token",
+      method: :post,
+      body: { 
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: "http://localhost:5000/auth/spotify/callback"
+      },
+      headers: { 
+        "Authorization": "Basic #{Base64.strict_encode64("#{settings.spotify_id}:#{settings.spotify_key}")}"
+      },
+      followlocation: true
+    )
+
+    logger.info request.inspect
+
+    request.on_complete do |response|
+      logger.info "[]" * 100
+      logger.info response
+      if response.success?
+        logger.info "SUCCESS"
+      elsif response.timed_out?
+        logger.info "TIMED OUT"
+      elsif response.code == 0
+        logger.info response.return_message
+      else
+        logger.info "HTTP request failed: #{response.code.to_s}"
+        redirect '/auth/failure'
+      end
+    end
+
+    request.run
+    
+  end
 end
+
+before do
+  @user = session[:user]
+end
+
+# App
+get '/', auth: :user do
+  erb :home
+end
+
+get '/login' do
+  erb :auth
+end
+
+get '/auth/spotify/callback' do
+  template = nil
+  
+  if params[:code]
+    #return "Is not the same session" unless params[:state] == session[:spotify_state]
+    return "auth failed due to #{params[:error]}" if params[:error]
+    refresh_token params[:code]
+    template = :token
+  elsif params[:access_token]
+    return "Your access_token is #{params[:access_token]}"
+    session[:user] = true
+    redirect '/home'
+  end
+
+  erb template 
+end
+
+get '/auth/failure' do
+  erb :error
+end
+

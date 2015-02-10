@@ -1,0 +1,12 @@
+.hidden {
+  display: none;
+}
+
+.error-message {
+  text-align: center;
+}
+
+.spinner {
+  width: 100px;
+  height: 100px;
+}

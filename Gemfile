@@ -13,3 +13,4 @@ end
 
 gem 'omniauth-spotify', '~> 0.0.5'
 gem 'rspotify', '~> 1.11.0'
+gem 'typhoeus', '~> 0.7.1'

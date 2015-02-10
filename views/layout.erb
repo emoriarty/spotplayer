@@ -9,11 +9,13 @@
 
 <!-- ******************************************************************************************
 Set the type and color theme here - the Pro version contains additional themes -->
-<link href="css/hawthorne_type2_color3.css" rel="stylesheet">
+<link href="/css/hawthorne_type2_color3.css" rel="stylesheet">
 <!--  ************************************************************************************* -->
 
-<link href="css/font-awesome.min.css" rel="stylesheet">
-<script src="js/vendor/modernizr.js"></script>
+<link href="/css/font-awesome.min.css" rel="stylesheet">
+<link href="/css/spinner.css" rel="stylesheet">
+<link href="/css/common.css" rel="stylesheet">
+<script src="/js/vendor/modernizr.js"></script>
 
 </head>
 <body>
@@ -34,9 +36,7 @@ Set the type and color theme here - the Pro version contains additional themes -
 	</div>
 </div>
 <div class="row">
-	<div class="small-12 medium-12 large-12 small-centered columns">
-    <button id="btn-auth" class="large expand">Login with Spotify</button>
-	</div>
+  <%= yield %>
 </div>
 <div class="row">
 	<div class="small-12 medium-12 large-12 columns">
@@ -60,9 +60,9 @@ Set the type and color theme here - the Pro version contains additional themes -
 	</div>
 </div>
 
-<script src="js/vendor/jquery.min.js"></script>
-<script src="js/foundation.min.js"></script>
-<script src="js/hawthorne.js"></script>
+<script src="/js/vendor/jquery.min.js"></script>
+<script src="/js/foundation.min.js"></script>
+<script src="/js/hawthorne.js"></script>
 
 </body>
 </html>
