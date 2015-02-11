@@ -2,10 +2,8 @@ require 'sinatra'
 require 'sinatra/contrib'
 require "sinatra/reloader" if development?
 require 'omniauth-spotify'
-require 'uri'
-require 'digest'
-require 'json'
-require 'httparty'
+require 'base64'
+require_relative 'lib/spotify'
 
 # Config
 configure do
@@ -39,20 +37,6 @@ helpers do
     @user = true
   end
   
-  def refresh_token(code)
-    id_and_secret = Base64.strict_encode64("#{settings.spotify_id}:#{settings.spotify_key}")
-    res = HTTParty.post("https://accounts.spotify.com/api/token",
-      :body => {
-        :grant_type => "authorization_code",
-        :code => code,
-        :redirect_uri => "http://localhost:5000/auth/spotify/callback"
-      },
-      :headers => {
-        "Authorization" => "Basic #{id_and_secret}"
-      })
-
-    logger.info res
-  end
 end
 
 before do
@@ -69,23 +53,22 @@ get '/login' do
 end
 
 get '/auth/spotify/callback' do
-  template = nil
-  
-  if params[:code]
-    #return "Is not the same session" unless params[:state] == session[:spotify_state]
-    return "auth failed due to #{params[:error]}" if params[:error]
-    refresh_token params[:code]
-    template = :token
-  elsif params[:access_token]
-    return "Your access_token is #{params[:access_token]}"
-    session[:user] = true
-    redirect '/home'
-  end
+  redirect "/auth/failure" if params[:error]
 
-  erb template 
+  session[:user] = true
+  session[:token] = env['omniauth.auth'].credentials.token
+  session[:refresh_token] = env['omniauth.auth'].credentials.refresh_token
+
+  redirect "/me" 
 end
 
 get '/auth/failure' do
   erb :error
 end
 
+get '/me' do
+  response = Spotify.me session[:token]
+  @profile = response.parsed_response
+  logger.info @profile
+  erb :profile
+end
