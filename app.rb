@@ -5,7 +5,7 @@ require 'omniauth-spotify'
 require 'uri'
 require 'digest'
 require 'json'
-require 'typhoeus'
+require 'httparty'
 
 # Config
 configure do
@@ -40,38 +40,18 @@ helpers do
   end
   
   def refresh_token(code)
-    request = Typhoeus::Request.new("https://accounts.spotify.com/api/token",
-      method: :post,
-      body: { 
-        grant_type: "authorization_code",
-        code: code,
-        redirect_uri: "http://localhost:5000/auth/spotify/callback"
+    id_and_secret = Base64.strict_encode64("#{settings.spotify_id}:#{settings.spotify_key}")
+    res = HTTParty.post("https://accounts.spotify.com/api/token",
+      :body => {
+        :grant_type => "authorization_code",
+        :code => code,
+        :redirect_uri => "http://localhost:5000/auth/spotify/callback"
       },
-      headers: { 
-        "Authorization": "Basic #{Base64.strict_encode64("#{settings.spotify_id}:#{settings.spotify_key}")}"
-      },
-      followlocation: true
-    )
+      :headers => {
+        "Authorization" => "Basic #{id_and_secret}"
+      })
 
-    logger.info request.inspect
-
-    request.on_complete do |response|
-      logger.info "[]" * 100
-      logger.info response
-      if response.success?
-        logger.info "SUCCESS"
-      elsif response.timed_out?
-        logger.info "TIMED OUT"
-      elsif response.code == 0
-        logger.info response.return_message
-      else
-        logger.info "HTTP request failed: #{response.code.to_s}"
-        redirect '/auth/failure'
-      end
-    end
-
-    request.run
-    
+    logger.info res
   end
 end
 
