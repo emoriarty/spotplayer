@@ -1,4 +1,5 @@
 require 'httparty'
+require 'data_mapper'
 
 # All methods return the next structure
 # {
@@ -8,6 +9,7 @@ require 'httparty'
 #
 module Spotify
   include HTTParty
+
 
   def self.access_token(code, client_id, client_secret, log = nil)
     id_and_secret = Base64.strict_encode64("#{client_id}:#{client_secret}")
@@ -22,6 +24,16 @@ module Spotify
       :debug_output => log)
       
       yield res
+  end
+
+  def refresh_token(token, client_id, client_secret, log)
+    id_and_secret = Base64.strict_encode64("#{client_id}:#{client_secret}")
+    yield post("https://accounts.spotify.com/api/token",
+      :body => {
+        :grant_type => "resfresh_token",
+        :refresh_token => "token"
+      },
+      :debug_output => log)
   end
 
   def self.me(token)
