@@ -51,23 +51,22 @@ end
 get '/auth/spotify/callback' do
   redirect "/auth/failure" if params[:error]
   logger.info env['omniauth.auth']
-  @user = nil
-  if @user = User.first(uid: env['omniauth.auth'].uid)
-    @user.update token: env['omniauth.auth'].credentials.token,
-      refresh_token: env['omniauth.auth'].credentials.refresh_token,
-      expires_at: env['omniauth.auth'].credentials.expires_at
-  else
-    logger.info env['omniauth.auth'].uid
-    logger.info env['omniauth.auth'].credentials.token
-    @user = User.create(uid: env['omniauth.auth'].uid,
-      token: env['omniauth.auth'].credentials.token,
-      refresh_token: env['omniauth.auth'].credentials.refresh_token,
-      expires_at: env['omniauth.auth'].credentials.expires_at)
+
+  @user = User.first_or_create({ uid: env['omniauth.auth'].uid }, {
+    uid: env['omniauth.auth'].uid,
+    token: env['omniauth.auth'].credentials.token,
+    refresh_token: env['omniauth.auth'].credentials.refresh_token,
+    expires_at: env['omniauth.auth'].credentials.expires_at
+  })
+
+  logger.info @user
+  unless @user.saved?
+    redirect 'auth/failure'
   end
-  logger.info @user.save
-  logger.info "redirecting to home"
+    
+  # saving the user id for session
   session['user'] = @user.uid
-  redirect '/' 
+  redirect '/me' 
 end
 
 get '/auth/failure' do
