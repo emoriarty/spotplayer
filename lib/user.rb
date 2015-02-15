@@ -1,19 +1,19 @@
 require 'data_mapper'
-require 'dm-sqlite-adapter'
-
-
-DataMapper::Logger.new($stdout, :debug)
-DataMapper.setup(:default, "sqlite::memory:")
-DataMapper.setup(:default, "sqlite:///#{Dir.getwd}/app.db")
+require 'date'
 
 class User
   include DataMapper::Resource 
 
   property :id, Serial
   property :uid, String
-  property :token, String
-  property :refresh_token, String
+  property :token, String, length: 300
+  property :refresh_token, String, length: 150
   property :expires_at, DateTime
+
+  # Mandatory method
+  def update_token(res)
+    update token: res.access_token, expires_at: DateTime.now + res.expires_in
+  end
 
   def authenticate(attempted_password)
     if self.password == attempted_password
@@ -25,4 +25,3 @@ class User
 end
 
 DataMapper.finalize
-DataMapper.auto_upgrade!

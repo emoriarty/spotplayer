@@ -2,12 +2,18 @@ require 'sinatra'
 require 'sinatra/contrib'
 require "sinatra/reloader" if development?
 require 'omniauth-spotify'
+require 'data_mapper'
+require 'dm-sqlite-adapter'
 require_relative 'lib/spotify'
 require_relative 'lib/user'
 
 # Config
-configure do
-    
+configure do  
+  DataMapper::Logger.new($stdout, :debug)
+  DataMapper.setup(:default, "sqlite::memory:")
+  DataMapper.setup(:default, "sqlite:///#{Dir.getwd}/app.db")
+  DataMapper.auto_upgrade!
+
   enable :sessions, :logging
   set :template, :erb
 
@@ -56,15 +62,20 @@ get '/auth/spotify/callback' do
     uid: env['omniauth.auth'].uid,
     token: env['omniauth.auth'].credentials.token,
     refresh_token: env['omniauth.auth'].credentials.refresh_token,
-    expires_at: env['omniauth.auth'].credentials.expires_at
+    expires_at: DateTime.strptime(env['omniauth.auth'].credentials.expires_at.to_s, '%s')
   })
 
   logger.info @user
   unless @user.saved?
+    logger.error "user not saved, redirectig to failure"
+    @user.errors.each do |error|
+      logger.error error
+    end
     redirect 'auth/failure'
   end
     
   # saving the user id for session
+  logger.info "user saved, redrecting to profile"
   session['user'] = @user.uid
   redirect '/me' 
 end
