@@ -1,8 +1,11 @@
 require 'data_mapper'
 require 'date'
+require_relative 'spotify'
 
 class User
   include DataMapper::Resource 
+  include Spotify::InstanceMethods
+  extend Spotify::ClassMethods
 
   property :id, Serial
   property :uid, String
@@ -22,6 +25,14 @@ class User
       false
     end
   end
+  
+  pre_call do
+    if refresh_token? expires_at
+      res = refresh_token token, client_id, client_secret
+      update_token res # This methods must exists in every class which includes this module
+    end
+  end
+
 end
 
 DataMapper.finalize
